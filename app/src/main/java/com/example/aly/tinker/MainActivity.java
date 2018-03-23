@@ -2,7 +2,9 @@ package com.example.aly.tinker;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import java.io.File;
 
@@ -10,6 +12,8 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String FILE_END=".apk";
     private String mPatchDir;
+    private static String TAG="MainActivity";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -23,7 +27,17 @@ public class MainActivity extends AppCompatActivity {
     }
     public void loadPatch(View view)
     {
-        TinkerManager.loadPatch(getPatchName());
+        try {
+            TinkerManager.loadPatch(getPatchName());
+        }
+        catch (Exception e)
+        {
+            Log.i(TAG, "loadPatchSuccess: ");
+        }
+        finally {
+            Toast.makeText(this, "LoadPatch", Toast.LENGTH_SHORT).show();
+        }
+
     }
     private String getPatchName()
     {

@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 //apply plugin: 'com.tencent.tinker.patch'
 //https://github.com/Tencent/tinker/wiki/Tinker-%E6%8E%A5%E5%85%A5%E6%8C%87%E5%8D%97
-def javaVersion=JavaVersion.VERSION_1_7
+def JavaVersion=JavaVersion.VERSION_1_7
 def bakPath=file("${buildDir}/bakApk")
 android {
     compileSdkVersion 26
@@ -12,6 +12,7 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
     }
     signingConfigs {
         release {
@@ -27,7 +28,7 @@ android {
 //            zipAlignEnabled true
 //        }
         release {
-            minifyEnabled false
+            minifyEnabled true
             signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             zipAlignEnabled true
@@ -81,9 +82,11 @@ dependencies {
 ext{
 
     tinkerEnable=true
-    tinkerOldApkPath="${bakPath}/"
-    tinkerApplyMappingPath="${bakPath}/"
-    tinkerApplyResourcePath="${bakPath}/"
+    //在这里指定基线版本
+//    tinkerOldApkPath="${bakPath}/"
+    tinkerOldApkPath="${bakPath}/app-release-0323-17-33-03.apk"
+    tinkerApplyMappingPath="${bakPath}/app-release-0323-17-33-03-mapping.txt"
+    tinkerApplyResourcePath="${bakPath}/app-release-0323-17-33-03-R.txt"
     tinkerID="1.0"
 }
 def getApplyMappingPath()
@@ -119,7 +122,7 @@ if(buildWithTinker())
         buildConfig{
             applyMapping=getApplyMappingPath()//指定oldapk打包时所使用的混淆文件
             applyResourceMapping =getApplyResourceMappingPath()//指定oldapk的资源文件
-            tinkerID=getTinkerIDValue()//指定TinkerID
+            tinkerId=getTinkerIDValue()//指定TinkerID
             keepDexApply=false//分包使用 一般置为false
         }
         dex{
@@ -131,6 +134,7 @@ if(buildWithTinker())
             pattern=["libs/*/*.so"]
         }
         res{
+
             pattern=["res/*","assets/*","resources.arcs","AndroidManifest.xml"]//指定tinker可以修改的所有资源类型
             ignoreChange=["assets/sample_meta.txt"]//不打入patch文件的部分 不受影响的资源路径
             largeModSize=100 //资源修改大小的默认值（k）超过这个值tinker会使用bsdiffer减少这个体积
