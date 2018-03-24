@@ -84,9 +84,11 @@ ext{
     tinkerEnable=true
     //在这里指定基线版本
 //    tinkerOldApkPath="${bakPath}/"
-    tinkerOldApkPath="${bakPath}/app-release-0323-17-33-03.apk"
-    tinkerApplyMappingPath="${bakPath}/app-release-0323-17-33-03-mapping.txt"
-    tinkerApplyResourcePath="${bakPath}/app-release-0323-17-33-03-R.txt"
+    tinkerOldApkPath="${bakPath}/app-release-0324-09-09-32.apk"
+    tinkerApplyMappingPath="${bakPath}/app-release-0324-09-09-32-mapping.txt"
+
+    tinkerApplyResourcePath="${bakPath}/app-release-0324-09-09-32-R.txt"
+
     tinkerID="1.0"
 }
 def getApplyMappingPath()
@@ -127,17 +129,18 @@ if(buildWithTinker())
         }
         dex{
             dexMode="jar"// jar 4以下/raw 4以上
-            pattern=["classes*.dex","assets/secondary-dex-?.jar"]//指定dex文件目录
+            pattern = ["classes*.dex",
+                       "assets/secondary-dex-?.jar"]//指定dex文件目录
             loader=["com.example.aly.tinker.MyTinkerApplication"]//指定加载patch文件时用到的类
         }
         lib{
-            pattern=["libs/*/*.so"]
+            pattern = ["lib/*/*.so"]
         }
         res{
 
-            pattern=["res/*","assets/*","resources.arcs","AndroidManifest.xml"]//指定tinker可以修改的所有资源类型
-            ignoreChange=["assets/sample_meta.txt"]//不打入patch文件的部分 不受影响的资源路径
-            largeModSize=100 //资源修改大小的默认值（k）超过这个值tinker会使用bsdiffer减少这个体积
+            pattern = ["res/*", "assets/*", "resources.arsc", "AndroidManifest.xml"]//指定tinker可以修改的所有资源类型
+            ignoreChange = ["assets/sample_meta.txt"]//不打入patch文件的部分 不受影响的资源路径
+            largeModSize = 100 //资源修改大小的默认值（k）超过这个值tinker会使用bsdiffer减少这个体积
 
         }
         //非必须项

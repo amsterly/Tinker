@@ -3,7 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Tinker.iml" filepath="$PROJECT_DIR$/Tinker.iml" />
+      <module fileurl="file://X:\Project\Tinker\Tinker.iml" filepath="X:\Project\Tinker\Tinker.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://X:\Project\Tinker\app\app.iml" filepath="X:\Project\Tinker\app\app.iml" />
     </modules>
   </component>
 </project>
