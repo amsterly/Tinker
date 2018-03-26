@@ -28,14 +28,15 @@ public class MainActivity extends AppCompatActivity {
     public void loadPatch(View view)
     {
         try {
+            Log.i(TAG, "loadPatch: Path:"+getPatchName());
             TinkerManager.loadPatch(getPatchName());
         }
         catch (Exception e)
         {
-            Log.i(TAG, "loadPatchSuccess: ");
+            Log.i(TAG, "loadPatchSuccess---------: ");
         }
         finally {
-            Toast.makeText(this, "LoadPatch", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "LoadPatch------", Toast.LENGTH_SHORT).show();
         }
 
     }
