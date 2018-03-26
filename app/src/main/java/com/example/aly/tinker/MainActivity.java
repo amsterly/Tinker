@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
     {
         try {
             Log.i(TAG, "loadPatch: Path:"+getPatchName());
-            TinkerManager.loadPatch(getPatchName());
+            TinkerManager.loadPatch(getPatchName(),"");
         }
         catch (Exception e)
         {
