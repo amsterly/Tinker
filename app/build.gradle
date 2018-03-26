@@ -13,6 +13,8 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
+        manifestPlaceholders=[UMENG_CHANNEL_VALUE:"umeng"]
+        flavorDimensions "versionCode"
     }
     signingConfigs {
         release {
@@ -32,15 +34,48 @@ android {
             signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             zipAlignEnabled true
+            //指定 release包的输出文件名为我们渠道的名字 省略具体的名字指定
+//            applicationVariants.all{
+//                variant->variant.outputs.each{
+//                    output->
+//                        def outputFile=output.outputFile
+//                        //要被替换的源字符串
+//                        def sourceFile = "-${variant.flavorName}-${variant.buildType.name}"
+//                        if(outputFile!=null&&outputFile.name.endsWith(".apk"))
+//                        {
+//                            def fileName="${variant.flavorName}"//"${variant.productFlavors[0].name}//"+".apk"
+//                            output.outputFileName= //new File(output.outputFile.parent, output.outputFile.name.replace(sourceFile, fileName))
+//                                    output.outputFile.name.replace(sourceFile, fileName)
+//                        }
+//                }
+//            }
         }
-//        beta {
-//            minifyEnabled false
-//            //    shrinkResources true
-//            signingConfig signingConfigs.release
-//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-//            zipAlignEnabled true
-//        }
 
+
+    }
+    productFlavors{
+        xiaomi{
+            manifestPlaceholders=[UMENG_CHANNEL_CALUE:"xiaomi"]
+            //替换资源值 需要注释掉string.xml定义的地方 才能再打包中不报：重复定义资源的错误
+            resValue "string","app_name","xiaomi_app"
+        }
+        wandoujia
+                {
+                    manifestPlaceholders=[UMENG_CHANNEL_CALUE:"wandoujia"]
+                    resValue "string","app_name","wandoujia_app"
+                }
+        //如何给测试人员根据多个功能点 打不同的包 还都能不卸载之前的app就能安装
+//        okhttp{
+//            applicationIdSuffix "okhttp"
+//            resValue "string","app_name","okhttp"
+//        }
+//        jpush{
+//            applicationIdSuffix "jpush"
+//            resValue "string","app_name","jpush"
+//        }
+    }
+    productFlavors.all{
+        flavor->flavor.manifestPlaceholders=[UMENG_CHANNEL_CALUE:name]
     }
 }
 
@@ -55,6 +90,9 @@ dependencies {
     annotationProcessor("com.tencent.tinker:tinker-android-anno:${TINKER_VERSION}") { changing = true }
     compileOnly("com.tencent.tinker:tinker-android-anno:${TINKER_VERSION}") { changing = true }
     implementation "com.android.support:multidex:1.0.1"
+    implementation 'com.umeng.sdk:common:latest.integration'
+    implementation 'com.umeng.sdk:analytics:latest.integration'
+
 //        implementation fileTree(dir: 'libs', include: ['*.jar'])
 //        testImplementation 'junit:junit:4.12'
 //        implementation "com.android.support:appcompat-v7:23.1.1"
@@ -84,10 +122,11 @@ ext{
     tinkerEnable=true
     //在这里指定基线版本
 //    tinkerOldApkPath="${bakPath}/"
-    tinkerOldApkPath="${bakPath}/app-release-0323-17-33-03.apk"
-    tinkerApplyMappingPath="${bakPath}/app-release-0323-17-33-03-mapping.txt"
-    tinkerApplyResourcePath="${bakPath}/app-release-0323-17-33-03-R.txt"
+    tinkerOldApkPath="${bakPath}/app-0326-17-01-09"
+    tinkerApplyMappingPath="${bakPath}/app-0326-17-01-09"
+    tinkerApplyResourcePath="${bakPath}/app-0326-17-01-09"
     tinkerID="1.0"
+    tinkerBuildFlavorDirctory="${bakPath}/app-0326-17-01-09"
 }
 def getApplyMappingPath()
 {
@@ -108,6 +147,10 @@ def getTinkerIDValue()
 def getOldApkPath()
 {
     return ext.tinkerOldApkPath
+}
+def getTinkerBuildFlavorDirectory()
+{
+    return ext.tinkerBuildFlavorDirctory
 }
 if(buildWithTinker())
 {
@@ -135,7 +178,7 @@ if(buildWithTinker())
         }
         res{
 
-            pattern=["res/*","assets/*","resources.arcs","AndroidManifest.xml"]//指定tinker可以修改的所有资源类型
+            pattern=["res/*","assets/*","resources.arsc","AndroidManifest.xml"]//指定tinker可以修改的所有资源类型
             ignoreChange=["assets/sample_meta.txt"]//不打入patch文件的部分 不受影响的资源路径
             largeModSize=100 //资源修改大小的默认值（k）超过这个值tinker会使用bsdiffer减少这个体积
 
@@ -197,6 +240,44 @@ if(buildWithTinker())
             }
         }
     }
+    project.afterEvaluate {
+        //sample use for build all flavor for one time
+        if (hasFlavors) {
+            task(tinkerPatchAllFlavorRelease) {
+                group = 'tinker'
+                def originOldPath = getTinkerBuildFlavorDirectory()
+                for (String flavor : flavors) {
+                    def tinkerTask = tasks.getByName("tinkerPatch${flavor.capitalize()}Release")
+                    dependsOn tinkerTask
+                    def preAssembleTask = tasks.getByName("process${flavor.capitalize()}ReleaseManifest")
+                    preAssembleTask.doFirst {
+                        String flavorName = preAssembleTask.name.substring(7, 8).toLowerCase() + preAssembleTask.name.substring(8, preAssembleTask.name.length() - 15)
+                        project.tinkerPatch.oldApk = "${originOldPath}/${flavorName}/${project.name}-${flavorName}-release.apk"
+                        project.tinkerPatch.buildConfig.applyMapping = "${originOldPath}/${flavorName}/${project.name}-${flavorName}-release-mapping.txt"
+                        project.tinkerPatch.buildConfig.applyResourceMapping = "${originOldPath}/${flavorName}/${project.name}-${flavorName}-release-R.txt"
 
+                    }
+
+                }
+            }
+
+            task(tinkerPatchAllFlavorDebug) {
+                group = 'tinker'
+                def originOldPath = getTinkerBuildFlavorDirectory()
+                for (String flavor : flavors) {
+                    def tinkerTask = tasks.getByName("tinkerPatch${flavor.capitalize()}Debug")
+                    dependsOn tinkerTask
+                    def preAssembleTask = tasks.getByName("process${flavor.capitalize()}DebugManifest")
+                    preAssembleTask.doFirst {
+                        String flavorName = preAssembleTask.name.substring(7, 8).toLowerCase() + preAssembleTask.name.substring(8, preAssembleTask.name.length() - 13)
+                        project.tinkerPatch.oldApk = "${originOldPath}/${flavorName}/${project.name}-${flavorName}-debug.apk"
+                        project.tinkerPatch.buildConfig.applyMapping = "${originOldPath}/${flavorName}/${project.name}-${flavorName}-debug-mapping.txt"
+                        project.tinkerPatch.buildConfig.applyResourceMapping = "${originOldPath}/${flavorName}/${project.name}-${flavorName}-debug-R.txt"
+                    }
+
+                }
+            }
+        }
+    }
 }
 
